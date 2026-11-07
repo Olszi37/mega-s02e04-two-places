@@ -1,0 +1,44 @@
+name: S02E04 remote incident worker
+on:
+  workflow_dispatch:
+    inputs:
+      model:
+        description: OpenRouter model with tool calling
+        required: true
+        default: google/gemini-2.5-flash
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: s02e04-job-1
+  cancel-in-progress: false
+jobs:
+  incident:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Verify runner
+        run: node --version
+      - name: Run worker tests
+        run: node --test
+      - name: Run remote agent
+        env:
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          JOB_MCP_URL: ${{ secrets.JOB_MCP_URL }}
+          OPENROUTER_MODEL: ${{ inputs.model }}
+        run: node worker.mjs
+      - name: Encrypt result and transcript
+        id: seal
+        if: always()
+        run: node seal-output.mjs
+      - name: Save encrypted result and transcript
+        if: always() && steps.seal.outcome == 'success'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: job-1-result-${{ github.run_id }}
+          path: sealed-output/
+          retention-days: 1
+          if-no-files-found: warn

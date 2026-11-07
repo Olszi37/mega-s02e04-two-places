@@ -1,0 +1,7 @@
+{
+  "name": "mega-s02e04-remote-worker",
+  "private": true,
+  "type": "module",
+  "scripts": { "test": "node --test", "start": "node worker.mjs" },
+  "engines": { "node": ">=22" }
+}

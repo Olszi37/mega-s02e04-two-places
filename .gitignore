@@ -1,0 +1,6 @@
+output/
+sealed-output/
+*private*key*
+.env
+*.log
+node_modules/
